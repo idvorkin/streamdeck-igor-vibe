@@ -1,5 +1,9 @@
 # Stream Deck Igor Vibe
 
+> "A few months ago, one of my coworkers was like 'in the future we'll just need keyboards with two buttons: yes or no.' Turns out I've basically been doing that (on steroids) while vibecoding."
+>
+> As a result, I decided to make this tool.
+
 A Stream Deck plugin for Igor's workflow - tmux pane navigation, voice activation, and utility keys.
 
 ![Stream Deck Mobile Screenshot](screenshot.png)
