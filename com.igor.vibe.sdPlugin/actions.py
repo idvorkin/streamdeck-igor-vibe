@@ -6,10 +6,47 @@ Edit this file and press the Reload button to apply changes.
 import subprocess
 import time
 
+# App bundle identifiers
+TERMINAL_APPS = {
+    "com.mitchellh.ghostty",
+    "com.googlecode.iterm2",
+    "com.apple.Terminal",
+}
+BROWSER_APPS = {
+    "com.microsoft.Edge",
+    "com.microsoft.edgemac",
+    "com.google.Chrome",
+    "org.mozilla.firefox",
+    "com.apple.Safari",
+}
+
+
 def log(msg: str):
     """Import log from plugin at runtime."""
     from plugin import log as plugin_log
     plugin_log(msg)
+
+
+def get_frontmost_app() -> str:
+    """Get the bundle identifier of the frontmost application."""
+    script = 'tell application "System Events" to get bundle identifier of first process whose frontmost is true'
+    result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
+    if result.returncode != 0:
+        log(f"ERROR getting frontmost app: {result.stderr}")
+        return ""
+    bundle_id = result.stdout.strip()
+    log(f"Frontmost app: {bundle_id}")
+    return bundle_id
+
+
+def is_terminal() -> bool:
+    """Check if frontmost app is a terminal."""
+    return get_frontmost_app() in TERMINAL_APPS
+
+
+def is_browser() -> bool:
+    """Check if frontmost app is a browser."""
+    return get_frontmost_app() in BROWSER_APPS
 
 
 def send_keys(keys: str, modifiers: list[str] | None = None):
@@ -36,18 +73,54 @@ def send_keys(keys: str, modifiers: list[str] | None = None):
         log(f"Keys sent successfully")
 
 
+def send_key_code(key_code: int, modifiers: list[str] | None = None):
+    """Send key code with modifiers using AppleScript."""
+    modifiers = modifiers or []
+    modifier_map = {
+        "control": "control down",
+        "command": "command down",
+        "shift": "shift down",
+        "option": "option down",
+    }
+    modifier_str = ", ".join(modifier_map[m] for m in modifiers if m in modifier_map)
+
+    if modifier_str:
+        script = f'tell application "System Events" to key code {key_code} using {{{modifier_str}}}'
+    else:
+        script = f'tell application "System Events" to key code {key_code}'
+
+    log(f"Sending key code: {script}")
+    result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
+    if result.returncode != 0:
+        log(f"ERROR: osascript failed: {result.stderr}")
+    else:
+        log(f"Key code sent successfully")
+
+
 def do_previous_pane():
-    log("ACTION: Previous Pane (Ctrl+A, p)")
-    send_keys("a", ["control"])
-    time.sleep(0.05)  # Allow tmux to process prefix
-    send_keys("p")
+    """Previous pane/tab - app-aware."""
+    app = get_frontmost_app()
+    if app in BROWSER_APPS:
+        log(f"ACTION: Previous Tab (Cmd+Shift+[) - browser: {app}")
+        send_key_code(33, ["command", "shift"])  # [ key
+    else:
+        log(f"ACTION: Previous Pane (Ctrl+A, p) - terminal: {app}")
+        send_keys("a", ["control"])
+        time.sleep(0.05)
+        send_keys("p")
 
 
 def do_next_pane():
-    log("ACTION: Next Pane (Ctrl+A, n)")
-    send_keys("a", ["control"])
-    time.sleep(0.05)  # Allow tmux to process prefix
-    send_keys("n")
+    """Next pane/tab - app-aware."""
+    app = get_frontmost_app()
+    if app in BROWSER_APPS:
+        log(f"ACTION: Next Tab (Cmd+Shift+]) - browser: {app}")
+        send_key_code(30, ["command", "shift"])  # ] key
+    else:
+        log(f"ACTION: Next Pane (Ctrl+A, n) - terminal: {app}")
+        send_keys("a", ["control"])
+        time.sleep(0.05)
+        send_keys("n")
 
 
 def do_voice():
@@ -141,6 +214,21 @@ def do_ctrlc():
     send_keys("c", ["control"])
 
 
+def do_reload():
+    """Reload - app-aware. Browser: refresh page. Terminal: hot-reload actions.py."""
+    app = get_frontmost_app()
+    if app in BROWSER_APPS:
+        log(f"ACTION: Refresh Page (Cmd+R) - browser: {app}")
+        send_keys("r", ["command"])
+    else:
+        log(f"ACTION: Hot-reload actions.py - terminal: {app}")
+        from plugin import load_actions
+        if load_actions():
+            log("Actions reloaded successfully!")
+        else:
+            log("Failed to reload actions")
+
+
 # Map action UUIDs to functions
 ACTIONS = {
     "com.igor.vibe.previouspane": do_previous_pane,
@@ -154,4 +242,5 @@ ACTIONS = {
     "com.igor.vibe.edge": do_edge,
     "com.igor.vibe.fullscreen": do_fullscreen,
     "com.igor.vibe.ctrlc": do_ctrlc,
+    "com.igor.vibe.reload": do_reload,
 }

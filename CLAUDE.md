@@ -13,8 +13,9 @@ Stream Deck plugin for Igor's workflow - tmux pane navigation and voice commands
 
 | UUID | Function | What it does |
 |------|----------|--------------|
-| `com.igor.vibe.previouspane` | `do_previous_pane()` | Ctrl+A, p (tmux prev) |
-| `com.igor.vibe.nextpane` | `do_next_pane()` | Ctrl+A, n (tmux next) |
+| `com.igor.vibe.previouspane` | `do_previous_pane()` | **App-aware** (see below) |
+| `com.igor.vibe.nextpane` | `do_next_pane()` | **App-aware** (see below) |
+| `com.igor.vibe.reload` | `do_reload()` | **App-aware** (see below) |
 | `com.igor.vibe.voice` | `do_voice()` | Right Cmd+Shift (Wispr) |
 | `com.igor.vibe.enter` | `do_enter()` | Enter key |
 | `com.igor.vibe.tab` | `do_tab()` | Tab key |
@@ -22,8 +23,22 @@ Stream Deck plugin for Igor's workflow - tmux pane navigation and voice commands
 | `com.igor.vibe.ctrlc` | `do_ctrlc()` | Ctrl+C |
 | `com.igor.vibe.ghostty` | `do_ghostty()` | Open Ghostty |
 | `com.igor.vibe.iterm` | `do_iterm()` | Open iTerm |
+| `com.igor.vibe.edge` | `do_edge()` | Open Edge |
 | `com.igor.vibe.fullscreen` | `do_fullscreen()` | Option+Enter |
-| `com.igor.vibe.reload` | `do_reload()` | Hot-reload actions.py |
+
+## App-Aware Actions
+
+These actions behave differently based on the frontmost application:
+
+| Action | Terminals (Ghostty, iTerm) | Browsers (Edge, Chrome, Safari, Firefox) |
+|--------|---------------------------|------------------------------------------|
+| Previous | Ctrl+A, p (tmux prev window) | Cmd+Shift+[ (prev tab) |
+| Next | Ctrl+A, n (tmux next window) | Cmd+Shift+] (next tab) |
+| Reload | Hot-reload actions.py | Cmd+R (refresh page) |
+
+**Recognized apps:**
+- Terminals: `com.mitchellh.ghostty`, `com.googlecode.iterm2`, `com.apple.Terminal`
+- Browsers: `com.microsoft.Edge`, `com.microsoft.edgemac`, `com.google.Chrome`, `org.mozilla.firefox`, `com.apple.Safari`
 
 ## Development
 
@@ -35,7 +50,29 @@ just restart        # Restart Stream Deck
 just reset          # Full reinstall
 ```
 
-Logs: `/tmp/igor-vibe-code/plugin.log`
+## Debugging
+
+**Log location:** `/tmp/igor-vibe-code/plugin.log`
+
+**View logs in real-time:**
+```bash
+tail -f /tmp/igor-vibe-code/plugin.log
+```
+
+**Log format:** `[HH:MM:SS] message`
+
+**What gets logged:**
+- Plugin startup and Stream Deck connection
+- Every button press event (`EVENT: keyDown | ACTION: ...`)
+- Frontmost app detection (`Frontmost app: com.mitchellh.ghostty`)
+- Action execution (`ACTION: Previous Pane (Ctrl+A, p) - terminal: ...`)
+- AppleScript commands being sent (`Sending keys: ...`)
+- Errors with full stderr output
+
+**Common debugging scenarios:**
+- Action not working? Check if frontmost app is detected correctly
+- Wrong behavior? Verify which app category (terminal/browser) is detected
+- Hot-reload not working? Look for "Actions reloaded" or error messages
 
 ## When to Restart
 

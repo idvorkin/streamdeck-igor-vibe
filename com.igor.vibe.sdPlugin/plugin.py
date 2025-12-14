@@ -48,19 +48,8 @@ def load_actions():
         return False
 
 
-def do_reload():
-    """Hot-reload the actions module."""
-    log("ACTION: Reload")
-    if load_actions():
-        log("Actions reloaded successfully!")
-    else:
-        log("Failed to reload actions")
-
-
 def get_action_handler(action: str):
     """Get handler for an action, supporting hot-reload."""
-    if action == "com.igor.vibe.reload":
-        return do_reload
     if actions_module and hasattr(actions_module, 'ACTIONS'):
         return actions_module.ACTIONS.get(action)
     return None
