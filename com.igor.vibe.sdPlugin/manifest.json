@@ -1,0 +1,178 @@
+{
+    "UUID": "com.igor.vibe",
+    "Name": "Igor Vibe",
+    "Version": "1.0.0",
+    "Author": "Igor",
+    "Description": "Stream Deck commands for Igor's workflow - pane navigation and voice",
+    "Category": "Custom",
+    "CategoryIcon": "icons/pluginIcon",
+    "Icon": "icons/pluginIcon",
+    "URL": "https://github.com/idvorkin/streamdeck-igor-vibe",
+    "CodePath": "plugin.sh",
+    "OS": [
+        {
+            "Platform": "mac",
+            "MinimumVersion": "10.15"
+        }
+    ],
+    "Software": {
+        "MinimumVersion": "6.0"
+    },
+    "SDKVersion": 2,
+    "Actions": [
+        {
+            "UUID": "com.igor.vibe.previouspane",
+            "Name": "Previous Pane",
+            "Tooltip": "Switch to previous tmux pane (Ctrl+A, p)",
+            "Icon": "icons/prev",
+            "States": [
+                {
+                    "Image": "icons/prev",
+                    "Title": "Prev",
+                    "TitleAlignment": "bottom",
+                    "FontSize": "16"
+                }
+            ]
+        },
+        {
+            "UUID": "com.igor.vibe.nextpane",
+            "Name": "Next Pane",
+            "Tooltip": "Switch to next tmux pane (Ctrl+A, n)",
+            "Icon": "icons/next",
+            "States": [
+                {
+                    "Image": "icons/next",
+                    "Title": "Next",
+                    "TitleAlignment": "bottom",
+                    "FontSize": "16"
+                }
+            ]
+        },
+        {
+            "UUID": "com.igor.vibe.voice",
+            "Name": "Voice",
+            "Tooltip": "Activate Wispr Flow (Right Cmd+Right Shift)",
+            "Icon": "icons/voice",
+            "States": [
+                {
+                    "Image": "icons/voice",
+                    "Title": "Voice",
+                    "TitleAlignment": "bottom",
+                    "FontSize": "16"
+                }
+            ]
+        },
+        {
+            "UUID": "com.igor.vibe.enter",
+            "Name": "Enter",
+            "Tooltip": "Press Enter key",
+            "Icon": "icons/enter",
+            "States": [
+                {
+                    "Image": "icons/enter",
+                    "Title": "Enter",
+                    "TitleAlignment": "bottom",
+                    "FontSize": "16"
+                }
+            ]
+        },
+        {
+            "UUID": "com.igor.vibe.tab",
+            "Name": "Tab",
+            "Tooltip": "Press Tab key",
+            "Icon": "icons/tab",
+            "States": [
+                {
+                    "Image": "icons/tab",
+                    "Title": "Tab",
+                    "TitleAlignment": "bottom",
+                    "FontSize": "16"
+                }
+            ]
+        },
+        {
+            "UUID": "com.igor.vibe.escape",
+            "Name": "Escape",
+            "Tooltip": "Press Escape key",
+            "Icon": "icons/escape",
+            "States": [
+                {
+                    "Image": "icons/escape",
+                    "Title": "Esc",
+                    "TitleAlignment": "bottom",
+                    "FontSize": "16"
+                }
+            ]
+        },
+        {
+            "UUID": "com.igor.vibe.ghostty",
+            "Name": "Ghostty",
+            "Tooltip": "Open Ghostty terminal",
+            "Icon": "icons/ghostty",
+            "States": [
+                {
+                    "Image": "icons/ghostty",
+                    "Title": "Ghostty",
+                    "TitleAlignment": "bottom",
+                    "FontSize": "14"
+                }
+            ]
+        },
+        {
+            "UUID": "com.igor.vibe.iterm",
+            "Name": "iTerm",
+            "Tooltip": "Open iTerm terminal",
+            "Icon": "icons/iterm",
+            "States": [
+                {
+                    "Image": "icons/iterm",
+                    "Title": "iTerm",
+                    "TitleAlignment": "bottom",
+                    "FontSize": "14"
+                }
+            ]
+        },
+        {
+            "UUID": "com.igor.vibe.fullscreen",
+            "Name": "Fullscreen",
+            "Tooltip": "Toggle fullscreen (Option+Enter)",
+            "Icon": "icons/fullscreen",
+            "States": [
+                {
+                    "Image": "icons/fullscreen",
+                    "Title": "Full",
+                    "TitleAlignment": "bottom",
+                    "FontSize": "16"
+                }
+            ]
+        },
+        {
+            "UUID": "com.igor.vibe.reload",
+            "Name": "Reload",
+            "Tooltip": "Hot-reload actions.py without restarting",
+            "Icon": "icons/reload",
+            "States": [
+                {
+                    "Image": "icons/reload",
+                    "Title": "Reload",
+                    "TitleAlignment": "bottom",
+                    "FontSize": "14"
+                }
+            ]
+        },
+        {
+            "UUID": "com.igor.vibe.ctrlc",
+            "Name": "Ctrl+C",
+            "Tooltip": "Send Ctrl+C (interrupt)",
+            "Icon": "icons/ctrlc",
+            "States": [
+                {
+                    "Image": "icons/ctrlc",
+                    "Title": "Ctrl+C",
+                    "TitleAlignment": "bottom",
+                    "FontSize": "14"
+                }
+            ]
+        }
+    ]
+}
