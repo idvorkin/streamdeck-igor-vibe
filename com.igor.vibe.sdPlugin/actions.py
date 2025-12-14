@@ -116,6 +116,16 @@ def do_iterm():
         log("iTerm opened")
 
 
+def do_edge():
+    log("ACTION: Open Microsoft Edge")
+    script = 'tell application "Microsoft Edge" to activate'
+    result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
+    if result.returncode != 0:
+        log(f"ERROR: {result.stderr}")
+    else:
+        log("Edge opened")
+
+
 def do_fullscreen():
     log("ACTION: Toggle Fullscreen (Option+Enter)")
     script = 'tell application "System Events" to key code 36 using {option down}'
@@ -141,6 +151,7 @@ ACTIONS = {
     "com.igor.vibe.escape": do_escape,
     "com.igor.vibe.ghostty": do_ghostty,
     "com.igor.vibe.iterm": do_iterm,
+    "com.igor.vibe.edge": do_edge,
     "com.igor.vibe.fullscreen": do_fullscreen,
     "com.igor.vibe.ctrlc": do_ctrlc,
 }
