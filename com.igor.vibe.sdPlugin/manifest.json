@@ -133,6 +133,20 @@
             ]
         },
         {
+            "UUID": "com.igor.vibe.edge",
+            "Name": "Edge",
+            "Tooltip": "Open Microsoft Edge browser",
+            "Icon": "icons/edge",
+            "States": [
+                {
+                    "Image": "icons/edge",
+                    "Title": "Edge",
+                    "TitleAlignment": "bottom",
+                    "FontSize": "16"
+                }
+            ]
+        },
+        {
             "UUID": "com.igor.vibe.fullscreen",
             "Name": "Fullscreen",
             "Tooltip": "Toggle fullscreen (Option+Enter)",
