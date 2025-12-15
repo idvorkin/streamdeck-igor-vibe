@@ -39,16 +39,6 @@ def get_frontmost_app() -> str:
     return bundle_id
 
 
-def is_terminal() -> bool:
-    """Check if frontmost app is a terminal."""
-    return get_frontmost_app() in TERMINAL_APPS
-
-
-def is_browser() -> bool:
-    """Check if frontmost app is a browser."""
-    return get_frontmost_app() in BROWSER_APPS
-
-
 def send_keys(keys: str, modifiers: list[str] | None = None):
     """Send key combination using AppleScript."""
     modifiers = modifiers or []
@@ -70,7 +60,7 @@ def send_keys(keys: str, modifiers: list[str] | None = None):
     if result.returncode != 0:
         log(f"ERROR: osascript failed: {result.stderr}")
     else:
-        log(f"Keys sent successfully")
+        log("Keys sent successfully")
 
 
 def send_key_code(key_code: int, modifiers: list[str] | None = None):
@@ -94,30 +84,40 @@ def send_key_code(key_code: int, modifiers: list[str] | None = None):
     if result.returncode != 0:
         log(f"ERROR: osascript failed: {result.stderr}")
     else:
-        log(f"Key code sent successfully")
+        log("Key code sent successfully")
 
 
 def do_previous_pane():
-    """Previous pane/tab - app-aware."""
+    """Previous pane/tab - app-aware. Defaults to terminal behavior for unknown apps."""
     app = get_frontmost_app()
     if app in BROWSER_APPS:
         log(f"ACTION: Previous Tab (Cmd+Shift+[) - browser: {app}")
         send_key_code(33, ["command", "shift"])  # [ key
-    else:
+    elif app in TERMINAL_APPS:
         log(f"ACTION: Previous Pane (Ctrl+A, p) - terminal: {app}")
+        send_keys("a", ["control"])
+        time.sleep(0.05)
+        send_keys("p")
+    else:
+        log(f"ACTION: Previous Pane (Ctrl+A, p) - unknown app '{app}', using terminal behavior")
         send_keys("a", ["control"])
         time.sleep(0.05)
         send_keys("p")
 
 
 def do_next_pane():
-    """Next pane/tab - app-aware."""
+    """Next pane/tab - app-aware. Defaults to terminal behavior for unknown apps."""
     app = get_frontmost_app()
     if app in BROWSER_APPS:
         log(f"ACTION: Next Tab (Cmd+Shift+]) - browser: {app}")
         send_key_code(30, ["command", "shift"])  # ] key
-    else:
+    elif app in TERMINAL_APPS:
         log(f"ACTION: Next Pane (Ctrl+A, n) - terminal: {app}")
+        send_keys("a", ["control"])
+        time.sleep(0.05)
+        send_keys("n")
+    else:
+        log(f"ACTION: Next Pane (Ctrl+A, n) - unknown app '{app}', using terminal behavior")
         send_keys("a", ["control"])
         time.sleep(0.05)
         send_keys("n")
@@ -220,13 +220,15 @@ def do_reload():
     if app in BROWSER_APPS:
         log(f"ACTION: Refresh Page (Cmd+R) - browser: {app}")
         send_keys("r", ["command"])
-    else:
+    elif app in TERMINAL_APPS:
         log(f"ACTION: Hot-reload actions.py - terminal: {app}")
         from plugin import load_actions
         if load_actions():
             log("Actions reloaded successfully!")
         else:
             log("Failed to reload actions")
+    else:
+        log(f"ACTION: Reload - no action for app: {app}")
 
 
 # Map action UUIDs to functions
