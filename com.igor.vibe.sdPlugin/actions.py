@@ -23,7 +23,11 @@ def get_voice_modifier():
     config = get_config()
     voice_config = config.get("voice_modifier", {})
     hostname = socket.gethostname()
-    return voice_config.get(hostname, voice_config.get("default", "command"))
+    modifier = voice_config.get(hostname, voice_config.get("default", "command"))
+    if modifier not in ("command", "control"):
+        log(f"WARNING: Invalid modifier '{modifier}', falling back to 'command'")
+        return "command"
+    return modifier
 
 # App bundle identifiers
 TERMINAL_APPS = {
