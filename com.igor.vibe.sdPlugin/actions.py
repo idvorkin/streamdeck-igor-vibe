@@ -14,7 +14,11 @@ def get_config():
     """Load config from config.json."""
     config_path = Path(__file__).parent / "config.json"
     if config_path.exists():
-        return json.loads(config_path.read_text())
+        try:
+            return json.loads(config_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as e:
+            log(f"ERROR: Invalid JSON in config.json: {e}")
+            return {}
     return {}
 
 
