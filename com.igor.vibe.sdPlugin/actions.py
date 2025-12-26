@@ -3,8 +3,35 @@ Hot-reloadable action handlers for Stream Deck plugin.
 Edit this file and press the Reload button to apply changes.
 """
 
+import json
+import socket
 import subprocess
 import time
+from pathlib import Path
+
+
+def get_config():
+    """Load config from config.json."""
+    config_path = Path(__file__).parent / "config.json"
+    if config_path.exists():
+        try:
+            return json.loads(config_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as e:
+            log(f"ERROR: Invalid JSON in config.json: {e}")
+            return {}
+    return {}
+
+
+def get_voice_modifier():
+    """Get voice modifier key based on machine name."""
+    config = get_config()
+    voice_config = config.get("voice_modifier", {})
+    hostname = socket.gethostname()
+    modifier = voice_config.get(hostname, voice_config.get("default", "command"))
+    if modifier not in ("command", "control"):
+        log(f"WARNING: Invalid modifier '{modifier}', falling back to 'command'")
+        return "command"
+    return modifier
 
 # App bundle identifiers
 TERMINAL_APPS = {
@@ -124,20 +151,24 @@ def do_next_pane():
 
 
 def do_voice():
-    log("ACTION: Voice (Right Command + Right Shift)")
-    code = '''
+    modifier = get_voice_modifier()
+    # Key codes: Right Command = 54, Right Control = 62, Right Shift = 60
+    modifier_key = 54 if modifier == "command" else 62
+    modifier_name = "Command" if modifier == "command" else "Control"
+    log(f"ACTION: Voice (Right {modifier_name} + Right Shift)")
+    code = f'''
 import Quartz
-RIGHT_COMMAND = 54
+MODIFIER_KEY = {modifier_key}
 RIGHT_SHIFT = 60
 source = Quartz.CGEventSourceCreate(Quartz.kCGEventSourceStateHIDSystemState)
-cmd_down = Quartz.CGEventCreateKeyboardEvent(source, RIGHT_COMMAND, True)
-Quartz.CGEventPost(Quartz.kCGHIDEventTap, cmd_down)
+mod_down = Quartz.CGEventCreateKeyboardEvent(source, MODIFIER_KEY, True)
+Quartz.CGEventPost(Quartz.kCGHIDEventTap, mod_down)
 shift_down = Quartz.CGEventCreateKeyboardEvent(source, RIGHT_SHIFT, True)
 Quartz.CGEventPost(Quartz.kCGHIDEventTap, shift_down)
 shift_up = Quartz.CGEventCreateKeyboardEvent(source, RIGHT_SHIFT, False)
 Quartz.CGEventPost(Quartz.kCGHIDEventTap, shift_up)
-cmd_up = Quartz.CGEventCreateKeyboardEvent(source, RIGHT_COMMAND, False)
-Quartz.CGEventPost(Quartz.kCGHIDEventTap, cmd_up)
+mod_up = Quartz.CGEventCreateKeyboardEvent(source, MODIFIER_KEY, False)
+Quartz.CGEventPost(Quartz.kCGHIDEventTap, mod_up)
 '''
     result = subprocess.run(
         ["/opt/homebrew/bin/uv", "run", "--with", "pyobjc-framework-Quartz", "python3", "-c", code],
@@ -146,7 +177,7 @@ Quartz.CGEventPost(Quartz.kCGHIDEventTap, cmd_up)
     if result.returncode != 0:
         log(f"ERROR: {result.stderr}")
     else:
-        log("Right Cmd+Shift sent successfully")
+        log(f"Right {modifier_name}+Shift sent successfully")
 
 
 def do_enter():
