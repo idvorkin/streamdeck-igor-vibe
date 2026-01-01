@@ -4,7 +4,18 @@
 
 Turns out while vibecoding, I've basically been doing that (on steroids). So I decided to make this tool.
 
-A Stream Deck plugin for Igor's workflow - tmux pane navigation, voice activation, and utility keys.
+## What is this?
+
+A [Stream Deck](https://www.elgato.com/stream-deck) plugin for **vibecoding**. A Stream Deck is basically a customizable keyboard - a grid of buttons where each button shows an icon and triggers an action. If you don't have the physical hardware, no problem - the [Stream Deck mobile app](https://www.elgato.com/stream-deck-mobile) turns your phone into one.
+
+**Vibecoding** is the workflow where you use AI assistants and voice dictation to write code, minimizing keyboard usage.
+
+**The idea:** When you're coding with voice (via [Wispr Flow](https://wispr.ai/) or similar) and AI, you rarely need a full keyboard. Most of your interaction is: speak code → AI writes it → approve/reject → navigate. This plugin gives you big, tactile buttons for the few commands you actually need:
+
+- **Navigate** between [tmux](https://github.com/tmux/tmux) panes/windows (where your terminals live)
+- **Trigger voice** dictation with one tap
+- **Send common keys** like Enter, Tab, Escape, Ctrl+C
+- **Switch apps** between terminal and browser
 
 Works on both physical Stream Deck hardware and the Stream Deck mobile app. The physical deck is great for a home setup, while the phone app is perfect when you're on a laptop.
 
