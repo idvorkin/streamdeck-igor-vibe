@@ -245,6 +245,50 @@ def do_ctrlc():
     send_keys("c", ["control"])
 
 
+def do_pane(number: int):
+    """Switch to tmux pane by number (Ctrl+A, number)."""
+    log(f"ACTION: Pane {number} (Ctrl+A, {number})")
+    send_keys("a", ["control"])
+    time.sleep(0.05)
+    send_keys(str(number))
+
+
+def do_pane1():
+    do_pane(1)
+
+
+def do_pane2():
+    do_pane(2)
+
+
+def do_pane3():
+    do_pane(3)
+
+
+def do_pane4():
+    do_pane(4)
+
+
+def do_pane5():
+    do_pane(5)
+
+
+def do_pane6():
+    do_pane(6)
+
+
+def do_pane7():
+    do_pane(7)
+
+
+def do_pane8():
+    do_pane(8)
+
+
+def do_pane9():
+    do_pane(9)
+
+
 def do_reload():
     """Reload - app-aware. Browser: refresh page. Terminal: hot-reload actions.py."""
     app = get_frontmost_app()
@@ -276,4 +320,13 @@ ACTIONS = {
     "com.igor.vibe.fullscreen": do_fullscreen,
     "com.igor.vibe.ctrlc": do_ctrlc,
     "com.igor.vibe.reload": do_reload,
+    "com.igor.vibe.pane1": do_pane1,
+    "com.igor.vibe.pane2": do_pane2,
+    "com.igor.vibe.pane3": do_pane3,
+    "com.igor.vibe.pane4": do_pane4,
+    "com.igor.vibe.pane5": do_pane5,
+    "com.igor.vibe.pane6": do_pane6,
+    "com.igor.vibe.pane7": do_pane7,
+    "com.igor.vibe.pane8": do_pane8,
+    "com.igor.vibe.pane9": do_pane9,
 }
