@@ -6,7 +6,11 @@ Turns out while vibecoding, I've basically been doing that (on steroids). So I d
 
 A Stream Deck plugin for Igor's workflow - tmux pane navigation, voice activation, and utility keys.
 
-![Stream Deck Mobile Screenshot](screenshot.png)
+Works on both physical Stream Deck hardware and the Stream Deck mobile app. The physical deck is great for a home setup, while the phone app is perfect when you're on a laptop.
+
+| Physical Stream Deck | Mobile App |
+|:---:|:---:|
+| ![Stream Deck XL](https://raw.githubusercontent.com/idvorkin/ipaste/main/20260101_070739.webp) | ![Stream Deck Mobile](screenshot.png) |
 
 ## Features
 

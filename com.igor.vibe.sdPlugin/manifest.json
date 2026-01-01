@@ -187,6 +187,132 @@
                     "FontSize": "14"
                 }
             ]
+        },
+        {
+            "UUID": "com.igor.vibe.pane1",
+            "Name": "Pane 1",
+            "Tooltip": "Switch to tmux pane 1 (Ctrl+A, 1)",
+            "Icon": "icons/pane1",
+            "States": [
+                {
+                    "Image": "icons/pane1",
+                    "Title": "1",
+                    "TitleAlignment": "bottom",
+                    "FontSize": "16"
+                }
+            ]
+        },
+        {
+            "UUID": "com.igor.vibe.pane2",
+            "Name": "Pane 2",
+            "Tooltip": "Switch to tmux pane 2 (Ctrl+A, 2)",
+            "Icon": "icons/pane2",
+            "States": [
+                {
+                    "Image": "icons/pane2",
+                    "Title": "2",
+                    "TitleAlignment": "bottom",
+                    "FontSize": "16"
+                }
+            ]
+        },
+        {
+            "UUID": "com.igor.vibe.pane3",
+            "Name": "Pane 3",
+            "Tooltip": "Switch to tmux pane 3 (Ctrl+A, 3)",
+            "Icon": "icons/pane3",
+            "States": [
+                {
+                    "Image": "icons/pane3",
+                    "Title": "3",
+                    "TitleAlignment": "bottom",
+                    "FontSize": "16"
+                }
+            ]
+        },
+        {
+            "UUID": "com.igor.vibe.pane4",
+            "Name": "Pane 4",
+            "Tooltip": "Switch to tmux pane 4 (Ctrl+A, 4)",
+            "Icon": "icons/pane4",
+            "States": [
+                {
+                    "Image": "icons/pane4",
+                    "Title": "4",
+                    "TitleAlignment": "bottom",
+                    "FontSize": "16"
+                }
+            ]
+        },
+        {
+            "UUID": "com.igor.vibe.pane5",
+            "Name": "Pane 5",
+            "Tooltip": "Switch to tmux pane 5 (Ctrl+A, 5)",
+            "Icon": "icons/pane5",
+            "States": [
+                {
+                    "Image": "icons/pane5",
+                    "Title": "5",
+                    "TitleAlignment": "bottom",
+                    "FontSize": "16"
+                }
+            ]
+        },
+        {
+            "UUID": "com.igor.vibe.pane6",
+            "Name": "Pane 6",
+            "Tooltip": "Switch to tmux pane 6 (Ctrl+A, 6)",
+            "Icon": "icons/pane6",
+            "States": [
+                {
+                    "Image": "icons/pane6",
+                    "Title": "6",
+                    "TitleAlignment": "bottom",
+                    "FontSize": "16"
+                }
+            ]
+        },
+        {
+            "UUID": "com.igor.vibe.pane7",
+            "Name": "Pane 7",
+            "Tooltip": "Switch to tmux pane 7 (Ctrl+A, 7)",
+            "Icon": "icons/pane7",
+            "States": [
+                {
+                    "Image": "icons/pane7",
+                    "Title": "7",
+                    "TitleAlignment": "bottom",
+                    "FontSize": "16"
+                }
+            ]
+        },
+        {
+            "UUID": "com.igor.vibe.pane8",
+            "Name": "Pane 8",
+            "Tooltip": "Switch to tmux pane 8 (Ctrl+A, 8)",
+            "Icon": "icons/pane8",
+            "States": [
+                {
+                    "Image": "icons/pane8",
+                    "Title": "8",
+                    "TitleAlignment": "bottom",
+                    "FontSize": "16"
+                }
+            ]
+        },
+        {
+            "UUID": "com.igor.vibe.pane9",
+            "Name": "Pane 9",
+            "Tooltip": "Switch to tmux pane 9 (Ctrl+A, 9)",
+            "Icon": "icons/pane9",
+            "States": [
+                {
+                    "Image": "icons/pane9",
+                    "Title": "9",
+                    "TitleAlignment": "bottom",
+                    "FontSize": "16"
+                }
+            ]
         }
     ]
 }
