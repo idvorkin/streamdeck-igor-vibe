@@ -6,6 +6,7 @@ Supports hot-reloading of actions.py via the Reload button.
 """
 
 import asyncio
+import base64
 import importlib
 import json
 import sys
@@ -21,6 +22,15 @@ LOG_FILE = LOG_DIR / "plugin.log"
 
 # Actions module - will be hot-reloaded
 actions_module = None
+
+# Global state for smart buttons
+# Stored in sys module to survive the __main__ vs plugin module import split
+if not hasattr(sys, "_plugin_state"):
+    sys._plugin_state = {
+        "websocket": None,
+        "contexts": {}  # action UUID -> context
+    }
+_state = sys._plugin_state
 
 
 def log(msg: str):
@@ -55,12 +65,66 @@ def get_action_handler(action: str):
     return None
 
 
+async def set_button_image(action: str, image_path: str):
+    """Update a button's image. image_path is relative to icons folder."""
+    ws = _state["websocket"]
+    contexts = _state["contexts"]
+
+    if not ws or action not in contexts:
+        log(f"Cannot set image: ws={ws is not None}, context={action in contexts}")
+        return
+
+    # Load and encode image
+    icons_dir = Path(__file__).parent / "icons"
+    full_path = icons_dir / f"{image_path}@2x.png"
+    if not full_path.exists():
+        full_path = icons_dir / f"{image_path}.png"
+
+    if not full_path.exists():
+        log(f"Image not found: {full_path}")
+        return
+
+    with open(full_path, "rb") as f:
+        image_data = base64.b64encode(f.read()).decode("utf-8")
+
+    msg = {
+        "event": "setImage",
+        "context": contexts[action],
+        "payload": {
+            "image": f"data:image/png;base64,{image_data}",
+            "target": 0  # 0 = both hardware and software
+        }
+    }
+    await ws.send(json.dumps(msg))
+    log(f"Set image: {image_path}")
+
+
+def notify_button_press(action: str):
+    """Notify actions module that a button was pressed (for cycle reset)."""
+    if actions_module and hasattr(actions_module, 'on_any_button_press'):
+        actions_module.on_any_button_press(action)
+
+
+def update_button_image(action: str, image_path: str):
+    """Sync wrapper for set_button_image - schedules the update."""
+    ws = _state["websocket"]
+    if ws:
+        async def safe_set_image():
+            try:
+                await set_button_image(action, image_path)
+            except Exception as e:
+                log(f"ERROR in set_button_image: {e}")
+        asyncio.create_task(safe_set_image())
+
+
 async def handle_stream_deck(port: int, plugin_uuid: str, register_event: str):
     """Connect to Stream Deck and handle events."""
     uri = f"ws://127.0.0.1:{port}"
     log(f"Connecting to Stream Deck at {uri}")
 
     async with websockets.connect(uri) as ws:
+        _state["websocket"] = ws
+
         # Register with Stream Deck
         register_msg = {"event": register_event, "uuid": plugin_uuid}
         await ws.send(json.dumps(register_msg))
@@ -72,10 +136,18 @@ async def handle_stream_deck(port: int, plugin_uuid: str, register_event: str):
                 data = json.loads(message)
                 event = data.get("event")
                 action = data.get("action")
+                context = data.get("context")
 
                 log(f"EVENT: {event} | ACTION: {action}")
 
+                # Store button context for image updates
+                if context and action:
+                    _state["contexts"][action] = context
+
                 if event == "keyDown":
+                    # Notify for cycle reset before handling
+                    notify_button_press(action)
+
                     handler = get_action_handler(action)
                     if handler:
                         handler()

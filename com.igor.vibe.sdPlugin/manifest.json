@@ -313,6 +313,20 @@
                     "FontSize": "16"
                 }
             ]
+        },
+        {
+            "UUID": "com.igor.vibe.voicecycle",
+            "Name": "Voice Cycle",
+            "Tooltip": "Smart button: Voice → Voice → Enter (resets if other button pressed)",
+            "Icon": "icons/voicecycle1",
+            "States": [
+                {
+                    "Image": "icons/voicecycle1",
+                    "Title": "V1",
+                    "TitleAlignment": "bottom",
+                    "FontSize": "16"
+                }
+            ]
         }
     ]
 }

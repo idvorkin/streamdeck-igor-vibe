@@ -30,6 +30,7 @@ Works on both physical Stream Deck hardware and the Stream Deck mobile app. The 
 | **Previous Pane** | Switch to previous tmux pane | `Ctrl+A`, `p` |
 | **Next Pane** | Switch to next tmux pane | `Ctrl+A`, `n` |
 | **Voice** | Activate Wispr Flow | Right Cmd + Right Shift |
+| **Voice Cycle** | Smart button: Voice → Voice → Enter | (see below) |
 | **Enter** | Press Enter key | `Enter` |
 | **Tab** | Press Tab key | `Tab` |
 | **Escape** | Press Escape key | `Esc` |
@@ -38,6 +39,17 @@ Works on both physical Stream Deck hardware and the Stream Deck mobile app. The 
 | **iTerm** | Open iTerm terminal | - |
 | **Fullscreen** | Toggle fullscreen | `Option+Enter` |
 | **Reload** | Hot-reload actions without restart | - |
+
+### Smart Buttons
+
+**Voice Cycle** is a smart button that cycles through actions:
+
+1. **Press 1**: Trigger voice (icon shows microphone with "1")
+2. **Press 2**: Trigger voice again (icon shows microphone with "2")
+3. **Press 3**: Trigger enter (icon shows enter arrow)
+4. Cycle repeats...
+
+If you press any other button, the cycle resets back to step 1. This is useful for the common vibecoding pattern: dictate → dictate again → submit.
 
 ## Requirements
 
