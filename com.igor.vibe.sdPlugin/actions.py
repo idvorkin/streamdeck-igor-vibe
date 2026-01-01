@@ -9,6 +9,10 @@ import subprocess
 import time
 from pathlib import Path
 
+# Voice cycle state: tracks press count for voice→voice→enter cycle
+_voice_cycle_count = 0
+_voice_cycle_action = "com.igor.vibe.voicecycle"
+
 
 def get_config():
     """Load config from config.json."""
@@ -306,6 +310,47 @@ def do_reload():
         log(f"ACTION: Reload - no action for app: {app}")
 
 
+def _update_voice_cycle_icon():
+    """Update the voice cycle button icon based on current state."""
+    global _voice_cycle_count
+    from plugin import update_button_image
+
+    # Icon names: voicecycle1, voicecycle2, voicecycle3 (for enter)
+    icon_num = (_voice_cycle_count % 3) + 1
+    icon_name = f"voicecycle{icon_num}"
+    log(f"Updating voice cycle icon to {icon_name} (count={_voice_cycle_count})")
+    update_button_image(_voice_cycle_action, icon_name)
+
+
+def do_voice_cycle():
+    """Smart voice button: voice → voice → enter, then repeat."""
+    global _voice_cycle_count
+
+    cycle_pos = _voice_cycle_count % 3
+
+    if cycle_pos < 2:
+        # First two presses: trigger voice
+        log(f"ACTION: Voice Cycle - voice (press {cycle_pos + 1}/3)")
+        do_voice()
+    else:
+        # Third press: enter
+        log(f"ACTION: Voice Cycle - enter (press 3/3)")
+        do_enter()
+
+    _voice_cycle_count += 1
+    _update_voice_cycle_icon()
+
+
+def on_any_button_press(action: str):
+    """Called before any button action - resets voice cycle if different button pressed."""
+    global _voice_cycle_count
+
+    if action != _voice_cycle_action and _voice_cycle_count > 0:
+        log(f"Voice cycle reset (interrupted by {action})")
+        _voice_cycle_count = 0
+        _update_voice_cycle_icon()
+
+
 # Map action UUIDs to functions
 ACTIONS = {
     "com.igor.vibe.previouspane": do_previous_pane,
@@ -329,4 +374,5 @@ ACTIONS = {
     "com.igor.vibe.pane7": do_pane7,
     "com.igor.vibe.pane8": do_pane8,
     "com.igor.vibe.pane9": do_pane9,
+    "com.igor.vibe.voicecycle": do_voice_cycle,
 }
