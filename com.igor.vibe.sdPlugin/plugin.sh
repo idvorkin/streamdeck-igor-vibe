@@ -6,4 +6,4 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # Run with uv to auto-install websockets dependency
-exec /opt/homebrew/bin/uv run --with websockets python3 plugin.py "$@"
+exec /opt/homebrew/bin/uv run --with websockets --with pyobjc-framework-Quartz python3 plugin.py "$@"
