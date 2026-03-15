@@ -94,6 +94,66 @@ def send_keys(keys: str, modifiers: list[str] | None = None):
         log("Keys sent successfully")
 
 
+# macOS virtual key codes
+_KEY_CODES = {
+    "a": 0, "b": 11, "c": 8, "d": 2, "e": 14, "f": 3, "g": 5, "h": 4,
+    "i": 34, "j": 38, "k": 40, "l": 37, "m": 46, "n": 45, "o": 31, "p": 35,
+    "q": 12, "r": 15, "s": 1, "t": 17, "u": 32, "v": 9, "w": 13, "x": 7,
+    "y": 16, "z": 6,
+    "1": 18, "2": 19, "3": 20, "4": 21, "5": 23, "6": 22, "7": 26, "8": 28,
+    "9": 25, "0": 29,
+    "\r": 36, "\t": 48,
+}
+
+# CGEvent modifier flags
+_MODIFIER_FLAGS = {
+    "control": 0x40000,   # kCGEventFlagMaskControl
+    "command": 0x100000,  # kCGEventFlagMaskCommand
+    "shift": 0x20000,     # kCGEventFlagMaskShift
+    "option": 0x80000,    # kCGEventFlagMaskAlternate
+}
+
+
+def send_keys_hid(keys: str, modifiers: list[str] | None = None):
+    """Send key combination using CGEvent (HID level) - bypasses Karabiner."""
+    modifiers = modifiers or []
+    key_code = _KEY_CODES.get(keys)
+    if key_code is None:
+        log(f"ERROR: Unknown key '{keys}' for HID send, falling back to AppleScript")
+        send_keys(keys, modifiers)
+        return
+
+    flag_mask = 0
+    for m in modifiers:
+        if m in _MODIFIER_FLAGS:
+            flag_mask |= _MODIFIER_FLAGS[m]
+
+    code = f'''
+import Quartz
+source = Quartz.CGEventSourceCreate(Quartz.kCGEventSourceStateHIDSystemState)
+event_down = Quartz.CGEventCreateKeyboardEvent(source, {key_code}, True)
+event_up = Quartz.CGEventCreateKeyboardEvent(source, {key_code}, False)
+'''
+    if flag_mask:
+        code += f'''
+Quartz.CGEventSetFlags(event_down, {flag_mask})
+Quartz.CGEventSetFlags(event_up, {flag_mask})
+'''
+    code += '''
+Quartz.CGEventPost(Quartz.kCGHIDEventTap, event_down)
+Quartz.CGEventPost(Quartz.kCGHIDEventTap, event_up)
+'''
+    log(f"Sending HID keys: {keys} modifiers={modifiers}")
+    result = subprocess.run(
+        ["/opt/homebrew/bin/uv", "run", "--with", "pyobjc-framework-Quartz", "python3", "-c", code],
+        capture_output=True, text=True
+    )
+    if result.returncode != 0:
+        log(f"ERROR: HID send failed: {result.stderr}")
+    else:
+        log("HID keys sent successfully")
+
+
 def send_key_code(key_code: int, modifiers: list[str] | None = None):
     """Send key code with modifiers using AppleScript."""
     modifiers = modifiers or []
@@ -126,14 +186,14 @@ def do_previous_pane():
         send_key_code(33, ["command", "shift"])  # [ key
     elif app in TERMINAL_APPS:
         log(f"ACTION: Previous Pane (Ctrl+A, p) - terminal: {app}")
-        send_keys("a", ["control"])
+        send_keys_hid("a", ["control"])
         time.sleep(0.05)
-        send_keys("p")
+        send_keys_hid("p")
     else:
         log(f"ACTION: Previous Pane (Ctrl+A, p) - unknown app '{app}', using terminal behavior")
-        send_keys("a", ["control"])
+        send_keys_hid("a", ["control"])
         time.sleep(0.05)
-        send_keys("p")
+        send_keys_hid("p")
 
 
 def do_next_pane():
@@ -144,14 +204,14 @@ def do_next_pane():
         send_key_code(30, ["command", "shift"])  # ] key
     elif app in TERMINAL_APPS:
         log(f"ACTION: Next Pane (Ctrl+A, n) - terminal: {app}")
-        send_keys("a", ["control"])
+        send_keys_hid("a", ["control"])
         time.sleep(0.05)
-        send_keys("n")
+        send_keys_hid("n")
     else:
         log(f"ACTION: Next Pane (Ctrl+A, n) - unknown app '{app}', using terminal behavior")
-        send_keys("a", ["control"])
+        send_keys_hid("a", ["control"])
         time.sleep(0.05)
-        send_keys("n")
+        send_keys_hid("n")
 
 
 def do_voice():
@@ -252,9 +312,9 @@ def do_ctrlc():
 def do_pane(number: int):
     """Switch to tmux pane by number (Ctrl+A, number)."""
     log(f"ACTION: Pane {number} (Ctrl+A, {number})")
-    send_keys("a", ["control"])
+    send_keys_hid("a", ["control"])
     time.sleep(0.05)
-    send_keys(str(number))
+    send_keys_hid(str(number))
 
 
 def do_pane1():
