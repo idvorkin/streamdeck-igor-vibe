@@ -9,6 +9,11 @@ import subprocess
 import time
 from pathlib import Path
 
+try:
+    import Quartz
+except ImportError:
+    Quartz = None  # type: ignore[assignment]
+
 # Voice cycle state: tracks press count for voice→voice→enter cycle
 _voice_cycle_count = 0
 _voice_cycle_action = "com.igor.vibe.voicecycle"
@@ -70,52 +75,59 @@ def get_frontmost_app() -> str:
     return bundle_id
 
 
-def send_keys(keys: str, modifiers: list[str] | None = None):
-    """Send key combination using AppleScript."""
+# macOS virtual key codes
+_KEY_CODES = {
+    "a": 0, "b": 11, "c": 8, "d": 2, "e": 14, "f": 3, "g": 5, "h": 4,
+    "i": 34, "j": 38, "k": 40, "l": 37, "m": 46, "n": 45, "o": 31, "p": 35,
+    "q": 12, "r": 15, "s": 1, "t": 17, "u": 32, "v": 9, "w": 13, "x": 7,
+    "y": 16, "z": 6,
+    "1": 18, "2": 19, "3": 20, "4": 21, "5": 23, "6": 22, "7": 26, "8": 28,
+    "9": 25, "0": 29,
+    "\r": 36, "\t": 48,
+    "escape": 53, "[": 33, "]": 30,
+}
+
+# CGEvent modifier flags
+_MODIFIER_FLAGS = {
+    "control": 0x40000,   # kCGEventFlagMaskControl
+    "command": 0x100000,  # kCGEventFlagMaskCommand
+    "shift": 0x20000,     # kCGEventFlagMaskShift
+    "option": 0x80000,    # kCGEventFlagMaskAlternate
+}
+
+
+def send_keys_hid(keys: str, modifiers: list[str] | None = None):
+    """Send key combination using CGEvent (HID level) - bypasses Karabiner."""
     modifiers = modifiers or []
-    modifier_map = {
-        "control": "control down",
-        "command": "command down",
-        "shift": "shift down",
-        "option": "option down",
-    }
-    modifier_str = ", ".join(modifier_map[m] for m in modifiers if m in modifier_map)
+    key_code = _KEY_CODES.get(keys)
+    if key_code is None:
+        log(f"ERROR: Unknown key '{keys}' for HID send")
+        return
 
-    if modifier_str:
-        script = f'tell application "System Events" to keystroke "{keys}" using {{{modifier_str}}}'
-    else:
-        script = f'tell application "System Events" to keystroke "{keys}"'
+    flag_mask = 0
+    for m in modifiers:
+        if m in _MODIFIER_FLAGS:
+            flag_mask |= _MODIFIER_FLAGS[m]
+        else:
+            log(f"WARNING: Unknown modifier '{m}' in send_keys_hid")
 
-    log(f"Sending keys: {script}")
-    result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
-    if result.returncode != 0:
-        log(f"ERROR: osascript failed: {result.stderr}")
-    else:
-        log("Keys sent successfully")
+    log(f"Sending HID keys: {keys} modifiers={modifiers}")
+    source = Quartz.CGEventSourceCreate(Quartz.kCGEventSourceStateHIDSystemState)
+    event_down = Quartz.CGEventCreateKeyboardEvent(source, key_code, True)
+    event_up = Quartz.CGEventCreateKeyboardEvent(source, key_code, False)
+    if flag_mask:
+        Quartz.CGEventSetFlags(event_down, flag_mask)
+        Quartz.CGEventSetFlags(event_up, flag_mask)
+    Quartz.CGEventPost(Quartz.kCGHIDEventTap, event_down)
+    Quartz.CGEventPost(Quartz.kCGHIDEventTap, event_up)
+    log("HID keys sent successfully")
 
 
-def send_key_code(key_code: int, modifiers: list[str] | None = None):
-    """Send key code with modifiers using AppleScript."""
-    modifiers = modifiers or []
-    modifier_map = {
-        "control": "control down",
-        "command": "command down",
-        "shift": "shift down",
-        "option": "option down",
-    }
-    modifier_str = ", ".join(modifier_map[m] for m in modifiers if m in modifier_map)
-
-    if modifier_str:
-        script = f'tell application "System Events" to key code {key_code} using {{{modifier_str}}}'
-    else:
-        script = f'tell application "System Events" to key code {key_code}'
-
-    log(f"Sending key code: {script}")
-    result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
-    if result.returncode != 0:
-        log(f"ERROR: osascript failed: {result.stderr}")
-    else:
-        log("Key code sent successfully")
+def _send_tmux_prefix_then(key: str):
+    """Send tmux prefix (Ctrl+A) followed by a key."""
+    send_keys_hid("a", ["control"])
+    time.sleep(0.05)
+    send_keys_hid(key)
 
 
 def do_previous_pane():
@@ -123,17 +135,13 @@ def do_previous_pane():
     app = get_frontmost_app()
     if app in BROWSER_APPS:
         log(f"ACTION: Previous Tab (Cmd+Shift+[) - browser: {app}")
-        send_key_code(33, ["command", "shift"])  # [ key
+        send_keys_hid("[", ["command", "shift"])
     elif app in TERMINAL_APPS:
         log(f"ACTION: Previous Pane (Ctrl+A, p) - terminal: {app}")
-        send_keys("a", ["control"])
-        time.sleep(0.05)
-        send_keys("p")
+        _send_tmux_prefix_then("p")
     else:
         log(f"ACTION: Previous Pane (Ctrl+A, p) - unknown app '{app}', using terminal behavior")
-        send_keys("a", ["control"])
-        time.sleep(0.05)
-        send_keys("p")
+        _send_tmux_prefix_then("p")
 
 
 def do_next_pane():
@@ -141,17 +149,13 @@ def do_next_pane():
     app = get_frontmost_app()
     if app in BROWSER_APPS:
         log(f"ACTION: Next Tab (Cmd+Shift+]) - browser: {app}")
-        send_key_code(30, ["command", "shift"])  # ] key
+        send_keys_hid("]", ["command", "shift"])
     elif app in TERMINAL_APPS:
         log(f"ACTION: Next Pane (Ctrl+A, n) - terminal: {app}")
-        send_keys("a", ["control"])
-        time.sleep(0.05)
-        send_keys("n")
+        _send_tmux_prefix_then("n")
     else:
         log(f"ACTION: Next Pane (Ctrl+A, n) - unknown app '{app}', using terminal behavior")
-        send_keys("a", ["control"])
-        time.sleep(0.05)
-        send_keys("n")
+        _send_tmux_prefix_then("n")
 
 
 def do_voice():
@@ -160,101 +164,70 @@ def do_voice():
     modifier_key = 54 if modifier == "command" else 62
     modifier_name = "Command" if modifier == "command" else "Control"
     log(f"ACTION: Voice (Right {modifier_name} + Right Shift)")
-    code = f'''
-import Quartz
-MODIFIER_KEY = {modifier_key}
-RIGHT_SHIFT = 60
-source = Quartz.CGEventSourceCreate(Quartz.kCGEventSourceStateHIDSystemState)
-mod_down = Quartz.CGEventCreateKeyboardEvent(source, MODIFIER_KEY, True)
-Quartz.CGEventPost(Quartz.kCGHIDEventTap, mod_down)
-shift_down = Quartz.CGEventCreateKeyboardEvent(source, RIGHT_SHIFT, True)
-Quartz.CGEventPost(Quartz.kCGHIDEventTap, shift_down)
-shift_up = Quartz.CGEventCreateKeyboardEvent(source, RIGHT_SHIFT, False)
-Quartz.CGEventPost(Quartz.kCGHIDEventTap, shift_up)
-mod_up = Quartz.CGEventCreateKeyboardEvent(source, MODIFIER_KEY, False)
-Quartz.CGEventPost(Quartz.kCGHIDEventTap, mod_up)
-'''
-    result = subprocess.run(
-        ["/opt/homebrew/bin/uv", "run", "--with", "pyobjc-framework-Quartz", "python3", "-c", code],
-        capture_output=True, text=True
-    )
-    if result.returncode != 0:
-        log(f"ERROR: {result.stderr}")
-    else:
-        log(f"Right {modifier_name}+Shift sent successfully")
+    source = Quartz.CGEventSourceCreate(Quartz.kCGEventSourceStateHIDSystemState)
+    mod_down = Quartz.CGEventCreateKeyboardEvent(source, modifier_key, True)
+    Quartz.CGEventPost(Quartz.kCGHIDEventTap, mod_down)
+    shift_down = Quartz.CGEventCreateKeyboardEvent(source, 60, True)
+    Quartz.CGEventPost(Quartz.kCGHIDEventTap, shift_down)
+    shift_up = Quartz.CGEventCreateKeyboardEvent(source, 60, False)
+    Quartz.CGEventPost(Quartz.kCGHIDEventTap, shift_up)
+    mod_up = Quartz.CGEventCreateKeyboardEvent(source, modifier_key, False)
+    Quartz.CGEventPost(Quartz.kCGHIDEventTap, mod_up)
+    log(f"Right {modifier_name}+Shift sent successfully")
 
 
 def do_enter():
     log("ACTION: Enter")
-    send_keys("\r")
+    send_keys_hid("\r")
 
 
 def do_tab():
     log("ACTION: Tab")
-    send_keys("\t")
+    send_keys_hid("\t")
 
 
 def do_escape():
     log("ACTION: Escape")
-    script = 'tell application "System Events" to key code 53'
+    send_keys_hid("escape")
+
+
+def _open_app(name: str):
+    """Open/activate an application using AppleScript."""
+    log(f"ACTION: Open {name}")
+    script = f'tell application "{name}" to activate'
     result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
     if result.returncode != 0:
         log(f"ERROR: {result.stderr}")
     else:
-        log("Escape sent successfully")
+        log(f"{name} opened")
 
 
 def do_ghostty():
-    log("ACTION: Open Ghostty")
-    script = 'tell application "Ghostty" to activate'
-    result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
-    if result.returncode != 0:
-        log(f"ERROR: {result.stderr}")
-    else:
-        log("Ghostty opened")
+    _open_app("Ghostty")
 
 
 def do_iterm():
-    log("ACTION: Open iTerm")
-    script = 'tell application "iTerm" to activate'
-    result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
-    if result.returncode != 0:
-        log(f"ERROR: {result.stderr}")
-    else:
-        log("iTerm opened")
+    _open_app("iTerm")
 
 
 def do_edge():
-    log("ACTION: Open Microsoft Edge")
-    script = 'tell application "Microsoft Edge" to activate'
-    result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
-    if result.returncode != 0:
-        log(f"ERROR: {result.stderr}")
-    else:
-        log("Edge opened")
+    _open_app("Microsoft Edge")
 
 
 def do_fullscreen():
     log("ACTION: Toggle Fullscreen (Option+Enter)")
-    script = 'tell application "System Events" to key code 36 using {option down}'
-    result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
-    if result.returncode != 0:
-        log(f"ERROR: {result.stderr}")
-    else:
-        log("Fullscreen toggled")
+    send_keys_hid("\r", ["option"])
 
 
 def do_ctrlc():
     log("ACTION: Ctrl+C")
-    send_keys("c", ["control"])
+    send_keys_hid("c", ["control"])
 
 
 def do_pane(number: int):
     """Switch to tmux pane by number (Ctrl+A, number)."""
     log(f"ACTION: Pane {number} (Ctrl+A, {number})")
-    send_keys("a", ["control"])
-    time.sleep(0.05)
-    send_keys(str(number))
+    _send_tmux_prefix_then(str(number))
 
 
 def do_pane1():
@@ -298,7 +271,7 @@ def do_reload():
     app = get_frontmost_app()
     if app in BROWSER_APPS:
         log(f"ACTION: Refresh Page (Cmd+R) - browser: {app}")
-        send_keys("r", ["command"])
+        send_keys_hid("r", ["command"])
     elif app in TERMINAL_APPS:
         log(f"ACTION: Hot-reload actions.py - terminal: {app}")
         from plugin import load_actions
